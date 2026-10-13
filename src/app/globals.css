@@ -97,6 +97,7 @@
 .app-header { display: flex; align-items: center; gap: 25px; height: 68px; flex: none; padding: 0 24px 0 20px; background: var(--surface); border-bottom: 1px solid var(--line-subtle); z-index: 10; }
 .product-brand { display: flex; align-items: center; gap: 11px; font-size: 16px; font-weight: 650; letter-spacing: -.035em; white-space: nowrap; }
 .product-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: var(--brand-ink); color: var(--brand-accent); }
+.product-logo { display: block; width: 36px; height: 36px; background: currentColor; mask: url('/brand/logos/chart-replayer-candles.png') center / contain no-repeat; -webkit-mask: url('/brand/logos/chart-replayer-candles.png') center / contain no-repeat; transform: translateY(-.5px); }
 .product-subtitle { display: block; font-size: 10px; color: var(--text-tertiary); font-weight: 400; letter-spacing: 0; margin-top: 1px; }
 .project-title { display: flex; align-items: center; gap: 13px; font-size: 13px; color: var(--text-secondary); min-width: 0; }
 .header-divider { height: 24px; width: 1px; background: var(--line); margin-right: 6px; }
@@ -302,7 +303,7 @@
 @media (max-width:760px) {
   .app-shell { height: auto; min-height: 100dvh; overflow: visible; }
   .app-header { position: sticky; top: 0; height: 60px; padding-inline: 12px; gap: 8px; }
-  .product-brand { gap: 8px; font-size: 13px; }.product-mark { width: 31px; height: 31px; border-radius: 10px; }.product-subtitle { display: none; }.project-title { display: none; }
+  .product-brand { gap: 8px; font-size: 13px; }.product-mark { width: 31px; height: 31px; border-radius: 10px; }.product-logo { width: 31px; height: 31px; }.product-subtitle { display: none; }.project-title { display: none; }
   .header-actions { gap: 2px; }.header-actions [data-slot="button"][data-size="icon"] { height: 32px; width: 32px; }.header-actions .export-button { height: 34px; font-size: 11px; padding-inline: 12px; margin-left: 4px; }
   .studio-layout { grid-template-columns: minmax(0,1fr); grid-template-rows: auto auto auto; flex: none; }
   .tool-rail { grid-row: 1; padding: 6px 12px; border-right: 0; border-bottom: 1px solid var(--line-subtle); position: sticky; top: 60px; z-index: 9; }

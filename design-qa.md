@@ -177,3 +177,11 @@ final result: passed
 The user requested the action below the token rather than beside it. Change token now occupies a separate full-width 40px row after identity/sample metadata; the Solana/address line stays on one line with overflow ellipsis. Evidence `change-token-below.png` was captured and inspected at the current narrow desktop panel; token text and action no longer compete for horizontal space. Existing dialog behavior is unchanged. Lint and whitespace checks pass.
 
 final result: passed
+
+## Header candlestick logo — 2026-10-13
+
+The user supplied a four-part candlestick logo and requested replacing the header chart icon, with suitable color and size. ImageGen extracted a transparent silhouette from the supplied raster reference; the final asset is `public/brand/logos/chart-replayer-candles.png` (RGBA, 1054×1492, alpha outside the mark). The header applies it as an alpha mask, using existing brand accent on the dark-green brand tile. The mask is 36px on desktop and 31px on mobile; the asset's transparent padding provides optical inset. The adjacent Chart Replayer text remains the accessible product name.
+
+Evidence in the visualization directory: `logo-header-light.png`, `logo-header-dark.png`, `logo-header-mobile.png`, and paired `logo-header-proof.png`. Captures were opened and inspected: candle composition is recognizable, no white raster background remains, and the mark fits the tile in both themes. Mobile measured viewport/document width 375px and mark/mask width 31px. Scoped ESLint and TypeScript checks pass; the scoped TypeScript config excludes the unrelated, untracked nested PnL project that otherwise enters the root wildcard scan. Only the logo, header CSS/markup and this QA note are included in the release.
+
+final result: passed

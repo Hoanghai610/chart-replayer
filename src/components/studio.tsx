@@ -544,7 +544,7 @@ export function Studio() {
     <main className={`app-shell ${!chart ? "start-shell" : ""}`} onPointerDownCapture={() => audioRef.current?.unlock()}>
       <a href={chart ? "#preview" : "#start"} className="skip-link">{chart ? "Skip to preview" : "Skip to token form"}</a>
       <header className={`app-header ${!chart ? "start-header" : ""}`}>
-        <div className="product-brand"><span className="product-mark"><ChartLineUp size={22} weight="bold" aria-hidden="true" /></span><span>Chart Replayer<span className="product-subtitle">Make the moment move.</span></span></div>
+        <div className="product-brand"><span className="product-mark" aria-hidden="true"><span className="product-logo" /></span><span>Chart Replayer<span className="product-subtitle">Make the moment move.</span></span></div>
         {chart && <div className="project-title"><span className="header-divider" /><span>{chart.token.symbol ?? "Token"} replay</span><span className="status-badge">{demo ? "Sample" : "Studio"}</span></div>}
         <div className="header-actions">
           {chart && <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" aria-label={connectionLabel} onClick={() => setKeyOpen(true)} disabled={busy}><Key size={18} /><span className={`connection-dot ${needsKey ? "pending" : ""}`} /></Button></TooltipTrigger><TooltipContent>{connectionLabel}</TooltipContent></Tooltip>}
