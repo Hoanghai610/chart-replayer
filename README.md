@@ -57,7 +57,7 @@ the browser with no server.
 The approved direction adapts the ElevenLabs editor layout from
 [Mobbin](https://mobbin.com/screens/1303bc7c-b188-49c2-9aa2-311fed674ee3):
 a compact tool rail, one settings panel, a large video preview and a persistent
-history timeline. Window, Tags, Format and Effects group the editing controls.
+history timeline. Period, Tags, Format and Effects group the editing controls.
 On phones, the tools move to a sticky horizontal bar; selecting a tool scrolls
 to its settings, with a link back to the preview.
 
@@ -70,6 +70,13 @@ bundled Geist font provides the default fallback. No licensed Aeonik font is
 redistributed. The exported canvas has a soft brand outer frame: mint 200 in Light, green 950 in Dark. The Dark card uses near-black green charcoal and mint 300 accents.
 Choose a separate Light or Dark video theme in Format; chart, text, icons and
 the official Birdeye logo adapt to the selected theme in preview and export.
+Frame background changes only the outer canvas: six solid presets (Brand,
+Sage, Sand, Slate, Lilac, Charcoal) and four gradients (Mint glow, Forest,
+Dusk, Sunset). Footer text follows the background for contrast. Brand adapts
+to the video theme; other selections persist when the card theme changes.
+Custom color opens the system color picker for any solid color; footer ink
+automatically chooses black or white for contrast. The same palette and
+renderer drive preview and export.
 The video layout follows the supplied 4:5 reference: header, line chart,
 reserved trade caption, compact current/close price with inline change and footer. Candles use the source
 OHLC values; an unfinished candle reveals only its developing open/close range.

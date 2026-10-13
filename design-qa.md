@@ -109,3 +109,65 @@ No remaining actionable P0/P1/P2 findings in this scope.
 - [x] Full and focused paired visual comparisons; no remaining actionable P0/P1/P2 findings.
 
 final result: passed
+
+## Replay-period UX refinement — 2026-10-13
+
+### Scope and source
+
+The user flagged the Window settings panel as difficult to understand. This is a scoped edit to the existing studio, using the existing Beside/Birdeye tokens, components and Phosphor icons. No new design direction or renderer changes were requested.
+
+- User reference: `/var/folders/q5/b_p8c4g12l76bg0jc9gr1sxc0000gn/T/TemporaryItems/NSIRD_screencaptureui_TdXNxu/Screenshot 2026-10-13 at 14.00.00.png` (panel-only source; not used for pixel equality).
+- Current-run source capture: `/Users/hoanghai/.codex/visualizations/2026/10/13/01a13325-5a7a-76f0-b24c-24688f5b01dd/window-ux-before.png`.
+- Rendered implementation: same directory, `window-ux-after-dark.png` and `window-ux-after-light.png`.
+- Full-view paired evidence: `window-ux-comparison.png`; focused panel evidence: `window-ux-panel-comparison.png`.
+- Source/implementation viewport and pixel size: 1626 × 1109, 1:1; no scaling used. Focused comparison uses the same 328 × 1040 panel crop on each side.
+- State: synthetic WIF, last 7 days, 15-second clip, desktop dark, Period panel. The synthetic chart can refresh its prices between requests; chart-price equality is outside this settings-panel comparison.
+- Responsive evidence: `window-ux-mobile-light.png` and `window-ux-mobile-dark.png`, each 375 × 812. DOM measured `innerWidth = scrollWidth = 375`, including with exact-date controls expanded.
+
+### Audit steps and fixes
+
+1. Enter the period panel — improved. Earlier P2: source metadata occupied the top of the panel, while the low-effort preset action lived remotely below the preview. Compact token identity and a clearly labeled Change token action now precede six visible period presets. The misleading plus icon was removed.
+2. Choose a replay period — improved. Earlier P2: historical range and video duration were not explained together. The selected preset has a check and semantic pressed state. The summary shows UTC start/end times and the actual video duration. Window was renamed Period; Run to ATH became Run-up to peak.
+3. Fine-tune — improved. Earlier P2: two date inputs, eight abbreviated interval choices, disabled options and candle-count constraints competed with the main task. Exact dates and Chart detail now use native keyboard-accessible disclosures. Chart detail defaults to automatic and offers valid interval choices with full unit names. It explains the effect on chart detail separately from video length. The detached instructional tip was removed.
+
+### Post-fix visual review
+
+The paired full-view and focused comparisons were opened together and inspected after the fixes. Differences in hierarchy, density and timeline height are intentional for this UX improvement, rather than fidelity defects.
+
+- Typography: existing font family and panel hierarchy; readable full-word presets, no clipped labels at tested desktop/mobile widths.
+- Spacing/layout: existing panel width and spacing rhythm, two equal preset columns, date inputs progressively revealed; compact source block. The shorter timeline leaves more room for the chart.
+- Colors/tokens: existing semantic surfaces, brand selection border/fill, and text hierarchy in Light/Dark. Selection also has a check and pressed semantics, so color is not the only cue.
+- Assets/icons: existing token avatar and Phosphor check/caret; no generated or approximated assets needed.
+- Copy: task-first period label, explicit UTC summary, visible 15-second outcome, plain interval units; technical candle-limit copy is no longer on the default path.
+- No actionable P0/P1/P2 findings remain in the scoped settings panel. This is not a full accessibility certification; screen-reader announcement timing and real-data histories were not audited.
+
+### Interaction and code verification
+
+- Last 24h updates dates, timeline handles and automatic interval to 15 minutes; video length remains 15 seconds.
+- Exact-date disclosure opens/closes. Native keyboard editing commits a custom range, updates the summary and clamps within bounds.
+- Manual 1-hour interval updates the Chart detail summary to Custom; choosing Last 7 days resets it to Automatic / 1 hour.
+- Mobile Period navigation scrolls to settings; controls remain within 375px width. Exact-date disclosure reflows without horizontal overflow.
+- Browser error console: no errors captured in the inspected desktop/mobile tabs.
+- TypeScript, lint, all 27 existing tests, and webpack production build pass. Tests were run through `node --import tsx --test` because the sandbox denies the tsx CLI's IPC listener.
+- Native disclosures and select reuse browser keyboard behavior; no additional interaction library or effect synchronization was introduced.
+- Local review only for this iteration; no Git push or Vercel release was performed.
+
+final result: passed
+
+## Frame background, custom color and Change token — 2026-10-13
+
+User-authorized scope: selectable outer video colors, preset solids/gradients, a custom solid color picker, a clearer Change token action, and deployment of these changes with the Period UX refinement. The new start-flow proposal remains unimplemented in `docs/START_FLOW_PROPOSAL.md`.
+
+- Format now offers six solids (Brand, Sage, Sand, Slate, Lilac, Charcoal), four gradients (Mint glow, Forest, Dusk, Sunset), and a labeled native Custom color picker with visible hex value and an explicit Use action for the retained custom color.
+- Only the outer canvas changes. A paired before/after pixel comparison of the same paused preview showed the interior card unchanged. Video Light/Dark changes the chart card independently; chosen non-Brand backgrounds persist.
+- Footer ink is selected per preset; arbitrary custom solids select black/white by relative luminance. Tests verify >=4.5:1 across every preset gradient and a 4,913-color custom gamut sample.
+- Preview and export share `paintVideoBackground`. Cache identity includes the background ID and active custom hex, so changing color asks to render again.
+- Actual gradient export: `/Users/hoanghai/Downloads/chart-replayer-WIF-line-dark-dusk-4H-6s-60fps-4x5.mp4`, H.264 1080×1350 + AAC, 6.08s. Decoded corner colors (38,56,75)/(96,79,109) agree with Dusk endpoints within encoding tolerance. Evidence: `dusk-export-frame.png` in the visualization directory.
+- Actual custom export: `/Users/hoanghai/Downloads/chart-replayer-WIF-line-dark-custom-4H-6s-60fps-4x5.mp4`. Decoded corner (208,167,138) agrees with selected #D2A98C within encoding tolerance. Evidence: `custom-export-frame.png`.
+- Picker evidence: `video-background-picker.png`, `background-sage-light.png`, `background-sage-landscape.png`, `custom-color-mobile.png`, `custom-color-preview.png`. Native picker opens and changing its value selects Custom, updates visible hex and preview. Mobile width and document width both measured 375px.
+- Change token is now an outlined button with strong text and a Phosphor change icon. Its dialog opens correctly; evidence: `start-flow-04-editor.png` and `change-token-dialog.png`.
+- Existing typography, spacing roles, semantic palette and icon family retained. No image assets introduced. The palette is functional color UI, with selected checks/pressed semantics and visible names.
+- TypeScript, lint, 30 tests and the production webpack build pass for the background/custom feature. The final Change token edit is a low-impact button styling change, checked visually and by opening its dialog.
+- No actionable P0/P1/P2 findings remain in the scoped controls. Real-token data and full assistive-technology testing remain outside this check.
+
+final result: passed

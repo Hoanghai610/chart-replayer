@@ -2,7 +2,8 @@ import type { BirdeyeCandle } from '@/server/birdeye/types';
 import { activeLabels, burstEventsAt, compactUsd, formatChange, formatPrice, shortAddress, type TagBurst, type VideoTimeline } from './chart-scene';
 import { LAYER_INFO, type EventBar, type TagEvent } from './chart-tags';
 import { videoColors, drawLogo, drawNumber, drawTokenAvatar, fitText, font, numberWidth, roundRect, type Rect, type VideoShape, type VideoTheme } from './frame-kit';
-import { BRAND, BRAND_SCALE, DARK_THEME } from './design-system';
+import { DARK_THEME } from './design-system';
+import { paintVideoBackground, type VideoBackgroundId } from './video-background';
 import { videoLayout } from './video-layout';
 import type { VideoIconName, VideoIcons } from './video-icons';
 import { lineReplay } from './line-replay';
@@ -14,6 +15,8 @@ export interface ChartScene {
   shape: VideoShape;
   chartStyle: ChartStyle;
   videoTheme: VideoTheme;
+  videoBackground?: VideoBackgroundId;
+  customBackgroundColor?: string;
   symbol: string;
   name?: string;
   tokenLogo?: CanvasImageSource | null;
@@ -63,8 +66,7 @@ export function drawChartFrame(ctx: CanvasRenderingContext2D, t: number, scene: 
   const L = videoLayout(scene.shape);
   const { w, h, u, header: H, plot: P, summary: S } = L;
   const candles = scene.candles;
-  ctx.fillStyle = scene.videoTheme === 'light' ? BRAND_SCALE[200] : BRAND_SCALE[950];
-  ctx.fillRect(0, 0, w, h);
+  const footerColor = paintVideoBackground(ctx, w, h, scene.videoBackground, scene.videoTheme, scene.customBackgroundColor);
   surface(ctx, L.card, 40 * u, C.ground);
   // Subtle brand tint stays behind content, rather than adding another panel.
   if (scene.videoTheme === 'dark') {
@@ -215,7 +217,6 @@ export function drawChartFrame(ctx: CanvasRenderingContext2D, t: number, scene: 
   text(ctx, `Open ${priceText(start)}`, S.x, top + 150 * u, 21 * u, C.text3);
   if (complete) text(ctx, 'Replay complete', S.x + S.w, top + 150 * u, 18 * u, C.text3, 500, 'right');
 
-  const footerColor = scene.videoTheme === 'light' ? BRAND.ink : BRAND_SCALE[100];
   text(ctx, 'Chart Replayer', L.card.x + 8 * u, L.footerY, 28 * u, footerColor, 600);
   text(ctx, 'Solana · UTC', w - L.card.x - 8 * u, L.footerY, 22 * u, footerColor, 500, 'right');
 }

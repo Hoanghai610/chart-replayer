@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
   clampRange,
   formatMoment,
@@ -9,9 +8,6 @@ import {
   fromInputValue,
   moveEdge,
   panRange,
-  PRESET_LABEL,
-  presetRange,
-  RANGE_PRESETS,
   toInputValue,
   type TimeRange,
 } from "@/lib/range";
@@ -50,10 +46,6 @@ export function RangePicker({
   const [drag, setDrag] = useState<Drag | null>(null);
 
   const span = Math.max(1, bounds.to - bounds.from);
-  const active = RANGE_PRESETS.find((preset) => {
-    const candidate = presetRange(preset, bounds, history);
-    return candidate.from === value.from && candidate.to === value.to;
-  });
   const xOf = (time: number) => ((time - bounds.from) / span) * WIDTH;
 
   const { area, line } = useMemo(() => {
@@ -121,23 +113,6 @@ export function RangePicker({
 
   return (
     <div className={`range-picker ${compact ? "compact" : ""}`}>
-      <div className="preset-row" role="group" aria-label="Range presets">
-        {RANGE_PRESETS.map((preset) => (
-          <Button
-            key={preset}
-            type="button"
-            size="sm"
-            variant="outline"
-            aria-pressed={active === preset}
-            disabled={disabled}
-            onClick={() => {
-              onChange(presetRange(preset, bounds, history), true);
-            }}
-          >
-            {PRESET_LABEL[preset]}
-          </Button>
-        ))}
-      </div>
       <div className="brush-frame">
         <svg
           ref={svgRef}

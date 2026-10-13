@@ -2,7 +2,7 @@
 
 import {
   ArrowRight, ArrowsClockwise, CaretDown, ChartLineUp, Check, CircleNotch,
-  DownloadSimple, FilmStrip, Info, Key, Moon, Pause, Play, Plus, Scissors,
+  DownloadSimple, FilmStrip, Info, Key, Moon, Pause, Play, Scissors,
   SkipBack, SlidersHorizontal, Sparkle, SpeakerHigh, SpeakerSlash, Sun, Tag,
 } from "@phosphor-icons/react";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,7 +19,7 @@ import { apiFetch, setVisitorApiKey } from "@/lib/api-client";
 import { drawChartFrame, drawMessage, type ChartAxis, type ChartScene, type ChartStyle } from "@/lib/chart-frame";
 import { barTime, compactUsd, cueSchedule, tagBursts, videoTimeline } from "@/lib/chart-scene";
 import { binTagEvents, DENSITY_LIMIT, LAYER_INFO, selectEvents, TAG_LAYERS, type Density, type TagEvent, type TagLayer } from "@/lib/chart-tags";
-import { autoTimeframe, formatMoment, formatSpan, fromInputValue, moveEdge, presetRange, snapRange, targetCandles, timeframeAllowed, toInputValue, type TimeRange } from "@/lib/range";
+import { autoTimeframe, formatMoment, formatSpan, fromInputValue, moveEdge, PRESET_LABEL, presetRange, RANGE_PRESETS, snapRange, targetCandles, timeframeAllowed, toInputValue, type TimeRange } from "@/lib/range";
 import { REPLAY_TIMEFRAMES, TIMEFRAME_SECONDS, type ReplayTimeframe } from "@/lib/replay-timeframe";
 import { loadTokenLogo } from "@/lib/token-logo";
 import { DEFAULT_SOUND, SOUND_PACK_LABELS, LiveCuePlayer, loadSamples, renderSoundtrack, type SoundSettings } from "@/lib/video-audio";
@@ -39,6 +39,7 @@ import type { ApiUsage } from "@/server/birdeye/usage";
 import type { TokenChart } from "@/server/services/token-chart";
 import { FONT_FAMILY } from "@/lib/design-system";
 import type { VideoTheme } from "@/lib/frame-kit";
+import { VIDEO_BACKGROUNDS, videoBackground, type VideoBackgroundId } from "@/lib/video-background";
 import { loadVideoIcons, type VideoIcons } from "@/lib/video-icons";
 import { RangePicker } from "./range-picker";
 import { short, TokenAvatar, UsagePanel } from "./shared";
@@ -46,6 +47,10 @@ import { short, TokenAvatar, UsagePanel } from "./shared";
 const LOGO_SRC = "/brand/logos/Birdeye_Data_Horizontal_Light.svg";
 const SOLANA_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const CLIP_DURATIONS = [6, 10, 15, 30, 60] as const;
+const INTERVAL_LABEL: Record<ReplayTimeframe, string> = {
+  "1m": "1 minute", "5m": "5 minutes", "15m": "15 minutes", "30m": "30 minutes",
+  "1H": "1 hour", "4H": "4 hours", "1D": "1 day", "1W": "1 week",
+};
 const BIG_SIZES = ["auto", 1_000, 5_000, 10_000, 50_000, 100_000, 500_000] as const;
 type BigSize = (typeof BIG_SIZES)[number];
 
@@ -103,6 +108,8 @@ export function Studio() {
   const [shape, setShape] = useState<VideoShape>("feed");
   const [chartStyle, setChartStyle] = useState<ChartStyle>("line");
   const [videoTheme, setVideoTheme] = useState<VideoTheme>("dark");
+  const [backgroundChoice, setBackgroundChoice] = useState<VideoBackgroundId>("brand");
+  const [customBackgroundColor, setCustomBackgroundColor] = useState("#C8D8CC");
   const [clipSeconds, setClipSeconds] = useState(15);
   const [fpsChoice, setFpsChoice] = useState<FrameRate>(60);
   const [axisChoice, setAxisChoice] = useState<ChartAxis>("price");
@@ -232,6 +239,10 @@ export function Studio() {
 
   // ── Window and candles ─────────────────────────────────────────────────
   const shownRange = draft ?? range;
+  const activePreset = chart && shownRange ? RANGE_PRESETS.find((preset) => {
+    const candidate = presetRange(preset, chart.bounds, chart.history);
+    return candidate.from === shownRange.from && candidate.to === shownRange.to;
+  }) : undefined;
   const timeframe: ReplayTimeframe = range
     ? timeframeChoice && timeframeAllowed(range, timeframeChoice) ? timeframeChoice : autoTimeframe(range, targetCandles(clipSeconds))
     : "1H";
@@ -385,6 +396,8 @@ export function Studio() {
     shape,
     chartStyle,
     videoTheme,
+    videoBackground: backgroundChoice,
+    customBackgroundColor,
     symbol: chart.token.symbol ?? "TOKEN",
     name: chart.token.name?.trim() && chart.token.name.trim().toLowerCase() !== (chart.token.symbol ?? "").toLowerCase() ? chart.token.name.trim() : undefined,
     tokenLogo,
@@ -404,7 +417,7 @@ export function Studio() {
     holdSeconds,
     effects: effectsOn,
     markers: markersOn,
-  } : null), [axis, barEvents, binned.bars, bursts, candles, chart, chartStyle, demo, effectsOn, holdSeconds, layers, lightLogo, logo, markersOn, range, shape, tagEvents, timeframe, timeline, tokenLogo, videoIcons, videoTheme]);
+  } : null), [axis, backgroundChoice, barEvents, binned.bars, bursts, candles, chart, chartStyle, customBackgroundColor, demo, effectsOn, holdSeconds, layers, lightLogo, logo, markersOn, range, shape, tagEvents, timeframe, timeline, tokenLogo, videoIcons, videoTheme]);
 
   const paint = useCallback((progress: number) => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -444,7 +457,7 @@ export function Studio() {
     };
   }, [clipSeconds, cues, looping, playing, rendering, scene, sound]);
 
-  const exportKey = JSON.stringify({ renderer: 'compact-contrast-v2', candleKey, tagKey, density, shape, chartStyle, videoTheme, clipSeconds, fps, axis, effectsOn, markersOn, holdSeconds, sound });
+  const exportKey = JSON.stringify({ renderer: 'outer-background-v3', candleKey, tagKey, density, shape, chartStyle, videoTheme, backgroundChoice, customBackgroundColor: backgroundChoice === 'custom' ? customBackgroundColor : undefined, clipSeconds, fps, axis, effectsOn, markersOn, holdSeconds, sound });
   const currentVideo = generated?.key === exportKey ? generated : null;
 
   const exportVideo = async () => {
@@ -458,7 +471,7 @@ export function Studio() {
     try {
       const audio = encoder.audio && sound.enabled ? await renderSoundtrack(cues, clipSeconds, sound) : null;
       const blob = await encodeVideo({ shape, encoder, seconds: clipSeconds, fps, audio, draw: (ctx, seconds) => drawChartFrame(ctx, seconds, scene), onProgress: setRenderProgress, signal: controller.signal });
-      const name = `chart-replayer-${chart.token.symbol ?? "token"}-${chartStyle}-${videoTheme}-${timeframe}-${clipSeconds}s-${fps}fps-${VIDEO_FORMATS[shape].label.replace(":", "x")}.${encoder.ext}`;
+      const name = `chart-replayer-${chart.token.symbol ?? "token"}-${chartStyle}-${videoTheme}-${backgroundChoice}-${timeframe}-${clipSeconds}s-${fps}fps-${VIDEO_FORMATS[shape].label.replace(":", "x")}.${encoder.ext}`;
       setGenerated({ url: URL.createObjectURL(blob), name, key: exportKey });
     } catch (caught) {
       if (!(caught instanceof DOMException && caught.name === "AbortError")) setExportError(caught instanceof Error ? caught.message : "Video export failed");
@@ -550,7 +563,7 @@ export function Studio() {
       </> : <Tabs value={activePanel} onValueChange={(value) => { setActivePanel(value); showMobileSettings(); }} orientation={toolOrientation} className="studio-layout">
         <nav className="tool-rail" aria-label="Studio tools">
           <TabsList className="tool-list" onClick={showMobileSettings}>
-            <TabsTrigger value="window" disabled={busy}><Scissors size={22} /><span>Window</span></TabsTrigger>
+            <TabsTrigger value="window" disabled={busy}><Scissors size={22} /><span>Period</span></TabsTrigger>
             <TabsTrigger value="tags" disabled={!chart || busy}><Tag size={22} /><span>Tags</span></TabsTrigger>
             <TabsTrigger value="format" disabled={!chart || busy}><FilmStrip size={22} /><span>Format</span></TabsTrigger>
             <TabsTrigger value="effects" disabled={!chart || busy}><Sparkle size={22} /><span>Effects</span></TabsTrigger>
@@ -561,26 +574,39 @@ export function Studio() {
         <aside ref={settingsRef} className="settings-panel" aria-label="Replay settings">
           {chart && <a href="#preview" className="mobile-preview-link"><Play size={14} />Back to preview</a>}
           <TabsContent value="window" className="settings-content">
-            <div className="panel-heading"><span className="eyebrow">01 / THE MOMENT</span><h1>Choose your window</h1><p>A whole history. One story worth replaying.</p></div>
+            <div className="panel-heading"><span className="eyebrow">01 / THE MOMENT</span><h1>Pick a replay period</h1><p>Choose the part of this token’s history to replay.</p></div>
             {!chart ? sourceForm : <>
-              <section className="setting-section source-section">
-                <div className="section-heading"><h2>Source token</h2><Button variant="ghost" size="sm" onClick={() => { setError(""); setSourceOpen(true); }} disabled={busy}>Change<Plus size={13} /></Button></div>
-                <div className="source-token"><TokenAvatar key={chart.token.logo ?? mint} src={chart.token.logo} symbol={chart.token.symbol ?? "TOKEN"} size={38} /><div><strong>{chart.token.name?.trim() ?? short(mint)}</strong><span>${chart.token.symbol ?? "TOKEN"} <span className="subtle">· Solana</span></span></div></div>
-                <code className="token-address">{short(mint)}</code>
-                {demo && <p className="sample-notice"><Info size={14} /> Synthetic chart & trades</p>}
+              <section className="setting-section compact-source" aria-label="Selected token">
+                <div className="source-token"><TokenAvatar key={chart.token.logo ?? mint} src={chart.token.logo} symbol={chart.token.symbol ?? "TOKEN"} size={34} /><div><strong title={chart.token.name ?? mint}>${chart.token.symbol ?? "TOKEN"}</strong><span>Solana · {short(mint)}</span></div><Button variant="outline" size="sm" className="change-token-button" onClick={() => { setError(""); setSourceOpen(true); }} disabled={busy}><ArrowsClockwise size={14} aria-hidden="true" />Change token</Button></div>
+                {demo && <p className="sample-notice">Sample data · simulated prices and trades</p>}
               </section>
-              <section className="setting-section">
-                <div className="section-heading"><h2>Replay window</h2><span className="small-badge">{formatSpan(range!.to - range!.from)}</span></div>
-                <p className="field-hint">Drag the handles on the timeline, or set exact times below.</p>
-                {(["from", "to"] as const).map((edge) => <div className="field-stack" key={edge}><Label htmlFor={`window-${edge}`}>{edge === "from" ? "Start" : "End"}<span className="subtle">UTC</span></Label><Input id={`window-${edge}`} type="datetime-local" value={toInputValue(range![edge])} min={toInputValue(chart.bounds.from)} max={toInputValue(chart.bounds.to)} disabled={busy} onChange={(event) => { const value = fromInputValue(event.target.value); if (value !== null) changeRange(moveEdge(range!, edge, value, chart.bounds), true); }} /></div>)}
+              <section className="setting-section period-section">
+                <div className="section-heading"><h2>Choose a period</h2></div>
+                <div className="period-presets" role="group" aria-label="Replay period presets">
+                  {RANGE_PRESETS.map((preset) => <Button key={preset} type="button" variant="outline" aria-pressed={activePreset === preset} disabled={busy} onClick={() => changeRange(presetRange(preset, chart.bounds, chart.history), true)}>{PRESET_LABEL[preset]}{activePreset === preset && <Check size={14} aria-hidden="true" />}</Button>)}
+                </div>
+                <div className="period-summary" role="status" aria-live="polite" aria-atomic="true">
+                  <strong>{activePreset ? PRESET_LABEL[activePreset] : "Custom period"}<span>{formatSpan(shownRange!.to - shownRange!.from)} · UTC</span></strong>
+                  <dl><div><dt>From</dt><dd>{formatMoment(shownRange!.from)}</dd></div><div><dt>To</dt><dd>{formatMoment(shownRange!.to)}</dd></div></dl>
+                  <span>Plays in a <b>{clipSeconds}-second video.</b></span>
+                </div>
+                <details className="period-details">
+                  <summary>Set exact dates<CaretDown size={15} aria-hidden="true" /></summary>
+                  <div className="period-details-body">
+                    <p className="field-hint">All times are in UTC. You can also drag the timeline handles to trim this period.</p>
+                    {(["from", "to"] as const).map((edge) => <div className="field-stack" key={edge}><Label htmlFor={`window-${edge}`}>{edge === "from" ? "Start date & time" : "End date & time"}<span className="subtle">UTC</span></Label><Input id={`window-${edge}`} type="datetime-local" value={toInputValue(range![edge])} min={toInputValue(chart.bounds.from)} max={toInputValue(chart.bounds.to)} disabled={busy} onChange={(event) => { const value = fromInputValue(event.target.value); if (value !== null) changeRange(moveEdge(range!, edge, value, chart.bounds), true); }} /></div>)}
+                  </div>
+                </details>
               </section>
-              <section className="setting-section">
-                <div className="section-heading"><h2>Chart interval</h2><button className={`text-button ${!timeframeChoice ? "selected" : ""}`} onClick={() => setTimeframeChoice(null)} disabled={busy}>Auto <Sparkle size={12} /></button></div>
-                <Segmented label="Chart interval" options={REPLAY_TIMEFRAMES} value={timeframe} onChange={(next) => { setTimeframeChoice(next); setPlaying(false); setCandleError(""); }} disabled={busy} isDisabled={(option) => !timeframeAllowed(range!, option)} />
-                <p className="field-hint">{candles ? `${candles.length.toLocaleString()} data points` : "Loading candles…"} · {timeframeChoice ? "Custom interval" : "Matched to your clip length"}. Disabled intervals fall outside the 3–8,000 candle limit.</p>
-                {candleError && <p className="inline-alert danger" role="alert">{candleError}</p>}
-              </section>
-              <div className="panel-tip"><Sparkle size={18} /><p><strong>Find the turning point.</strong> Try “Run to ATH” to capture the climb from a low to the all-time high.</p></div>
+              <details className="period-details chart-detail">
+                <summary><span>Chart detail<small>{timeframeChoice && timeframeChoice === timeframe ? "Custom" : "Automatic"} · {INTERVAL_LABEL[timeframe]}</small></span><CaretDown size={15} aria-hidden="true" /></summary>
+                <div className="period-details-body">
+                  <div className="field-stack"><Label htmlFor="chart-detail">Time per data point</Label><div className="select-wrap"><select id="chart-detail" className="select-field" value={timeframeChoice === timeframe ? timeframeChoice : "auto"} disabled={busy} onChange={(event) => { setTimeframeChoice(event.target.value === "auto" ? null : event.target.value as ReplayTimeframe); setPlaying(false); setCandleError(""); }}><option value="auto">Automatic (recommended)</option>{REPLAY_TIMEFRAMES.filter((option) => timeframeAllowed(range!, option)).map((option) => <option key={option} value={option}>{INTERVAL_LABEL[option]}</option>)}</select><CaretDown size={16} aria-hidden="true" /></div></div>
+                  <p className="field-hint">Each {chartStyle === "candles" ? "candle" : "point"} covers {INTERVAL_LABEL[timeframe]}. A shorter interval shows more detail; it doesn’t change the video length.</p>
+                  <p className="field-hint">{candles ? `${candles.length.toLocaleString()} data points` : "Loading chart…"} · Available intervals fit the selected period.</p>
+                </div>
+              </details>
+              {candleError && <p className="inline-alert danger" role="alert">{candleError}</p>}
             </>}
           </TabsContent>
 
@@ -609,7 +635,23 @@ export function Studio() {
             </section>
             <section className="setting-section"><div className="section-heading"><h2>Video theme</h2></div>
               <Segmented label="Video theme" options={["light", "dark"] as const} value={videoTheme} onChange={setVideoTheme} disabled={busy} render={(value) => value === "light" ? "Light" : "Dark"} />
-              <p className="field-hint">Soft mint in Light, charcoal and muted green in Dark. Applies to preview and export.</p>
+              <p className="field-hint">Light or dark chart card. Applies to preview and export.</p>
+            </section>
+            <section className="setting-section video-background-section"><div className="section-heading"><h2>Frame background</h2><span className="subtle">{videoBackground(backgroundChoice, videoTheme, customBackgroundColor).label}</span></div>
+              <p className="field-hint">Choose the color around the chart card.</p>
+              {(["solid", "gradient"] as const).map((kind) => <fieldset className="background-palette" key={kind} disabled={busy}><legend>{kind === "solid" ? "Solid colors" : "Gradients"}</legend><div className="background-swatches">
+                {VIDEO_BACKGROUNDS.filter((item) => item.kind === kind).map((item) => {
+                  const background = videoBackground(item.id, videoTheme);
+                  return <button type="button" key={item.id} className="background-swatch" aria-label={`${item.label} ${kind} background`} aria-pressed={backgroundChoice === item.id} onClick={() => setBackgroundChoice(item.id)}>
+                    <span className="background-swatch-color" style={{ background: background.swatch, color: background.ink }} aria-hidden="true">{backgroundChoice === item.id && <Check size={17} weight="bold" />}</span><span>{item.label}</span>
+                  </button>;
+                })}
+              </div>{kind === 'solid' && <div className={`custom-background ${backgroundChoice === 'custom' ? 'selected' : ''}`}>
+                <input type="color" id="custom-frame-color" aria-label="Choose custom frame color" value={customBackgroundColor} onChange={(event) => { setCustomBackgroundColor(event.target.value); setBackgroundChoice('custom'); }} />
+                <label htmlFor="custom-frame-color">Custom color<code>{customBackgroundColor.toUpperCase()}</code></label>
+                <button type="button" className="custom-background-use" aria-label="Use custom solid background" aria-pressed={backgroundChoice === 'custom'} onClick={() => setBackgroundChoice('custom')}>{backgroundChoice === 'custom' ? <Check size={16} aria-hidden="true" /> : 'Use'}</button>
+              </div>}</fieldset>)}
+              <p className="field-hint">Brand follows the video theme. Other colors stay as selected.</p>
             </section>
             <section className="setting-section"><div className="section-heading"><h2>Aspect ratio</h2></div>
               <Segmented label="Aspect ratio" options={Object.keys(VIDEO_FORMATS) as VideoShape[]} value={shape} onChange={setShape} disabled={busy} render={(value) => VIDEO_FORMATS[value].label} />
@@ -653,7 +695,7 @@ export function Studio() {
               <div className="playback-quality"><span>1080p</span><span>{fps} fps</span></div>
             </div>
             <div className="playhead-row"><Slider aria-label="Video playhead" min={0} max={1000} step={1} value={[Math.round(playhead * 1000)]} disabled={!scene || busy} onValueChange={([value]) => { const next = (value ?? 0) / 1000; setPlaying(false); playheadRef.current = next; setPlayhead(next); }} /></div>
-            {chart && range ? <div className="history-timeline"><div className="timeline-heading"><strong><ChartLineUp size={15} />History window</strong><span>{formatMoment((shownRange ?? range).from, false)} — {formatMoment((shownRange ?? range).to, false)} <span className="subtle">UTC</span></span></div><RangePicker history={chart.history} bounds={chart.bounds} value={shownRange ?? range} disabled={busy} onChange={changeRange} compact /><div className="timeline-footnote"><span>Drag to select · move the handles to trim</span><span>{formatSpan((shownRange ?? range).to - (shownRange ?? range).from)} selected</span></div></div> : <div className="timeline-empty"><SlidersHorizontal size={17} /><span>Your history timeline will appear here.</span><span className="subtle">Load a token to begin</span></div>}
+            {chart && range ? <div className="history-timeline"><div className="timeline-heading"><strong><ChartLineUp size={15} />Trim replay period</strong><span>{formatMoment((shownRange ?? range).from, false)} — {formatMoment((shownRange ?? range).to, false)} <span className="subtle">UTC</span></span></div><RangePicker history={chart.history} bounds={chart.bounds} value={shownRange ?? range} disabled={busy} onChange={changeRange} compact /><div className="timeline-footnote"><span>Drag the handles to adjust the selected period</span><span>{formatSpan((shownRange ?? range).to - (shownRange ?? range).from)} selected</span></div></div> : <div className="timeline-empty"><SlidersHorizontal size={17} /><span>Your history timeline will appear here.</span><span className="subtle">Load a token to begin</span></div>}
           </section>
         </section>
       </Tabs>}

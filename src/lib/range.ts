@@ -11,16 +11,16 @@ export interface TimeRange {
   to: number;
 }
 
-export const RANGE_PRESETS = ["full", "launch", "24h", "7d", "30d", "ath"] as const;
+export const RANGE_PRESETS = ["24h", "7d", "30d", "full", "launch", "ath"] as const;
 export type RangePreset = (typeof RANGE_PRESETS)[number];
 
 export const PRESET_LABEL: Record<RangePreset, string> = {
   full: "Full history",
   launch: "Launch day",
   "24h": "Last 24h",
-  "7d": "Last 7D",
-  "30d": "Last 30D",
-  ath: "Run to ATH",
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+  ath: "Run-up to peak",
 };
 
 /** Shortest window the brush allows: one hour. */
