@@ -577,8 +577,9 @@ export function Studio() {
             <div className="panel-heading"><span className="eyebrow">01 / THE MOMENT</span><h1>Pick a replay period</h1><p>Choose the part of this token’s history to replay.</p></div>
             {!chart ? sourceForm : <>
               <section className="setting-section compact-source" aria-label="Selected token">
-                <div className="source-token"><TokenAvatar key={chart.token.logo ?? mint} src={chart.token.logo} symbol={chart.token.symbol ?? "TOKEN"} size={34} /><div><strong title={chart.token.name ?? mint}>${chart.token.symbol ?? "TOKEN"}</strong><span>Solana · {short(mint)}</span></div><Button variant="outline" size="sm" className="change-token-button" onClick={() => { setError(""); setSourceOpen(true); }} disabled={busy}><ArrowsClockwise size={14} aria-hidden="true" />Change token</Button></div>
+                <div className="source-token"><TokenAvatar key={chart.token.logo ?? mint} src={chart.token.logo} symbol={chart.token.symbol ?? "TOKEN"} size={34} /><div><strong title={chart.token.name ?? mint}>${chart.token.symbol ?? "TOKEN"}</strong><span>Solana · {short(mint)}</span></div></div>
                 {demo && <p className="sample-notice">Sample data · simulated prices and trades</p>}
+                <Button variant="outline" size="sm" className="change-token-button" onClick={() => { setError(""); setSourceOpen(true); }} disabled={busy}><ArrowsClockwise size={14} aria-hidden="true" />Change token</Button>
               </section>
               <section className="setting-section period-section">
                 <div className="section-heading"><h2>Choose a period</h2></div>

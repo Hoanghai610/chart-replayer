@@ -155,7 +155,8 @@
 .sample-notice { display: flex; align-items: center; gap: 6px; color: var(--text-tertiary); font-size: 10px; }
 .compact-source { gap: 9px; }
 .compact-source .source-token > div { flex: 1; }
-.compact-source .change-token-button { flex: none; min-height: 34px; padding-inline: 10px; font-size: 12px; color: var(--text); border-color: var(--line-strong); }
+.compact-source .source-token > div > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.compact-source .change-token-button { width: 100%; min-height: 40px; margin-top: 3px; justify-content: center; padding-inline: 12px; font-size: 12px; color: var(--text); border-color: var(--line-strong); }
 .period-presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .period-presets [data-slot="button"] { justify-content: space-between; height: 40px; padding-inline: 12px; border-radius: var(--radius-md); font-size: 12px; font-weight: 500; }
 .period-presets [aria-pressed="true"] { color: var(--text); border-color: var(--focus); background: var(--success-bg); }

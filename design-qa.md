@@ -171,3 +171,9 @@ User-authorized scope: selectable outer video colors, preset solids/gradients, a
 - No actionable P0/P1/P2 findings remain in the scoped controls. Real-token data and full assistive-technology testing remain outside this check.
 
 final result: passed
+
+### Follow-up: place Change token below token identity
+
+The user requested the action below the token rather than beside it. Change token now occupies a separate full-width 40px row after identity/sample metadata; the Solana/address line stays on one line with overflow ellipsis. Evidence `change-token-below.png` was captured and inspected at the current narrow desktop panel; token text and action no longer compete for horizontal space. Existing dialog behavior is unchanged. Lint and whitespace checks pass.
+
+final result: passed
